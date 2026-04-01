@@ -513,7 +513,7 @@ export default function AnalyticsDashboard() {
               {viewMode === 'analytics' && latestDataChart && (
                 <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
                   <h3 className="text-lg font-semibold text-gray-800 mb-4 tracking-tight">Latest Snapshot</h3>
-                  <div className="h-80">
+                  <div className="h-[450px]">
                     <Bar 
                       ref={chartRef}
                       onClick={handleChartClick}
@@ -534,7 +534,16 @@ export default function AnalyticsDashboard() {
                             font: { weight: 'bold' }
                           }
                         },
-                        scales: { y: { beginAtZero: true, grace: '10%' } },
+                        scales: { 
+                          y: { beginAtZero: true, grace: '10%' },
+                          x: { 
+                            ticks: { 
+                              autoSkip: false,
+                              maxRotation: 45,
+                              minRotation: 45
+                            } 
+                          }
+                        },
                         interaction: { mode: 'index', intersect: true },
                         layout: { padding: { top: 30 } }
                       }} 
