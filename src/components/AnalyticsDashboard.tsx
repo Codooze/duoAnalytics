@@ -534,9 +534,9 @@ export default function AnalyticsDashboard() {
                             font: { weight: 'bold' }
                           }
                         },
-                        scales: { y: { beginAtZero: true } },
+                        scales: { y: { beginAtZero: true, grace: '10%' } },
                         interaction: { mode: 'index', intersect: true },
-                        layout: { padding: { top: 20 } }
+                        layout: { padding: { top: 30 } }
                       }} 
                     />
                   </div>
