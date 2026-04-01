@@ -12,7 +12,7 @@ import {
   Legend,
 } from 'chart.js';
 import { Bar, Line, getElementAtEvent } from 'react-chartjs-2';
-import { UploadCloud, FileSpreadsheet, XCircle, User, Trash2, BarChart2, GraduationCap, Settings, Info } from 'lucide-react';
+import { UploadCloud, FileSpreadsheet, XCircle, User, Trash2, BarChart2, GraduationCap, Settings, Info, Moon, Sun } from 'lucide-react';
 import ChartDataLabels from 'chartjs-plugin-datalabels';
 
 ChartJS.register(
@@ -99,6 +99,24 @@ const CLASS_COLORS = [
 
 export default function AnalyticsDashboard() {
   const [dataPoints, setDataPoints] = useState<ProcessedData[]>([]);
+  const [isDarkMode, setIsDarkMode] = useState<boolean>(false);
+
+  React.useEffect(() => {
+    if (typeof document !== 'undefined') {
+      const isDark = document.documentElement.classList.contains('dark');
+      setIsDarkMode(isDark);
+    }
+  }, []);
+
+  const toggleDarkMode = () => {
+    setIsDarkMode(prev => {
+      const newMode = !prev;
+      if (newMode) document.documentElement.classList.add('dark');
+      else document.documentElement.classList.remove('dark');
+      return newMode;
+    });
+  };
+
   const [uploadedFiles, setUploadedFiles] = useState<{id: string, name: string, date: Date}[]>([]);
   const [selectedClass, setSelectedClass] = useState<string>('All');
   const [metric, setMetric] = useState<keyof ProcessedData>('xpTotals');
@@ -384,14 +402,23 @@ export default function AnalyticsDashboard() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 p-8 font-sans text-gray-900">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-8 font-sans text-gray-900 dark:text-gray-100 transition-colors duration-300">
       <div className="max-w-7xl mx-auto space-y-8">
-        <header>
-          <h1 className="text-3xl font-bold tracking-tight text-gray-900">Duolingo Class Analytics</h1>
-          <p className="text-gray-500 mt-2">Upload student data exports directly from Duolingo to visualize progress</p>
+        <header className="flex justify-between items-start">
+          <div>
+            <h1 className="text-3xl font-bold tracking-tight text-gray-900 dark:text-white">Duolingo Class Analytics</h1>
+            <p className="text-gray-500 dark:text-gray-400 mt-2">Upload student data exports directly from Duolingo to visualize progress</p>
+          </div>
+          <button 
+            onClick={toggleDarkMode}
+            className="p-2 rounded-full border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-500 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition shadow-sm"
+            aria-label="Toggle dark mode"
+          >
+            {isDarkMode ? <Sun size={20} /> : <Moon size={20} />}
+          </button>
         </header>
 
-        <section className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+        <section className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700">
           <div className="flex flex-col md:flex-row gap-6 items-stretch">
             <div 
               onDragOver={(e) => e.preventDefault()} 
@@ -407,16 +434,16 @@ export default function AnalyticsDashboard() {
               </label>
             </div>
 
-            <div className="flex-1 bg-gray-50 border border-gray-100 rounded-xl p-6 overflow-y-auto min-h-[160px] max-h-[220px]">
+            <div className="flex-1 bg-gray-50 dark:bg-gray-800 border border-gray-100 dark:border-gray-700 rounded-xl p-6 overflow-y-auto min-h-[160px] max-h-[220px]">
               <h3 className="text-sm font-semibold text-gray-400 uppercase tracking-wider mb-4">Class Color Legend</h3>
               <div className="flex flex-wrap gap-2">
                 {classes.filter(c => c !== 'All').length > 0 ? (
                   classes.filter(c => c !== 'All').map((className, index) => {
                     const color = CLASS_COLORS[index % CLASS_COLORS.length];
                     return (
-                      <div key={className} className="flex items-center gap-2 bg-white px-3 py-1.5 rounded-full shadow-sm border border-gray-200">
+                      <div key={className} className="flex items-center gap-2 bg-white dark:bg-gray-700 px-3 py-1.5 rounded-full shadow-sm border border-gray-200 dark:border-gray-600">
                         <span className="w-3 h-3 rounded-full" style={{ backgroundColor: color.bg, borderColor: color.border, borderWidth: 1 }}></span>
-                        <span className="text-sm font-medium text-gray-700">{className}</span>
+                        <span className="text-sm font-medium text-gray-700 dark:text-gray-200">{className}</span>
                       </div>
                     );
                   })
@@ -432,14 +459,14 @@ export default function AnalyticsDashboard() {
 
         {dataPoints.length > 0 && (
           <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-            <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 col-span-1 space-y-6">
+            <div className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 col-span-1 space-y-6">
               <div>
                 <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-3">Filters</h3>
                 <div className="space-y-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Classroom</label>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Classroom</label>
                     <select 
-                      className="w-full border-gray-300 rounded-md shadow-sm p-2 border focus:ring-blue-500 focus:border-blue-500 outline-none"
+                      className="w-full bg-white dark:bg-gray-900 border-gray-300 dark:border-gray-600 dark:text-gray-100 rounded-md shadow-sm p-2 border focus:ring-blue-500 focus:border-blue-500 outline-none"
                       value={selectedClass} 
                       onChange={e => setSelectedClass(e.target.value)}
                     >
@@ -447,9 +474,9 @@ export default function AnalyticsDashboard() {
                     </select>
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Metric</label>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Metric</label>
                     <select 
-                      className="w-full border-gray-300 rounded-md shadow-sm p-2 border focus:ring-blue-500 focus:border-blue-500 outline-none"
+                      className="w-full bg-white dark:bg-gray-900 border-gray-300 dark:border-gray-600 dark:text-gray-100 rounded-md shadow-sm p-2 border focus:ring-blue-500 focus:border-blue-500 outline-none"
                       value={metric} 
                       onChange={e => setMetric(e.target.value as any)}
                     >
@@ -461,17 +488,17 @@ export default function AnalyticsDashboard() {
                 </div>
               </div>
 
-              <div className="pt-6 border-t border-gray-100">
+              <div className="pt-6 border-t border-gray-100 dark:border-gray-700">
                 <div className="flex justify-between items-center text-sm mb-4">
-                  <span className="text-gray-500">Total Records:</span>
-                  <span className="font-semibold text-gray-900">{dataPoints.length}</span>
+                  <span className="text-gray-500 dark:text-gray-400">Total Records:</span>
+                  <span className="font-semibold text-gray-900 dark:text-gray-100">{dataPoints.length}</span>
                 </div>
                 {uploadedFiles.length > 0 && (
                   <div className="space-y-4 mb-4">
-                    <span className="text-sm font-semibold text-gray-700">Uploaded Files ({uploadedFiles.length})</span>
+                    <span className="text-sm font-semibold text-gray-700 dark:text-gray-300">Uploaded Files ({uploadedFiles.length})</span>
                     <ul className="space-y-2">
                       {uploadedFiles.map(f => (
-                        <li key={f.id} className="flex justify-between items-center text-sm bg-gray-50 p-2 rounded-md border border-gray-200">
+                        <li key={f.id} className="flex justify-between items-center text-sm bg-gray-50 dark:bg-gray-700 p-2 rounded-md border border-gray-200 dark:border-gray-600 dark:text-gray-200">
                           <span className="truncate max-w-[160px]" title={f.name}>{f.name}</span>
                           <button onClick={() => removeFile(f.id)} className="text-red-500 hover:text-red-700 p-1" title="Remove file">
                             <Trash2 size={14} />
@@ -495,24 +522,24 @@ export default function AnalyticsDashboard() {
             </div>
 
             <div className="col-span-1 md:col-span-3 space-y-8">
-              <div className="flex bg-gray-100 p-1 rounded-lg w-fit">
+              <div className="flex bg-gray-100 dark:bg-gray-800 p-1 rounded-lg w-fit">
                 <button
                   onClick={() => setViewMode('analytics')}
-                  className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-colors ${viewMode === 'analytics' ? 'bg-white text-blue-600 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}
+                  className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-colors ${viewMode === 'analytics' ? 'bg-white dark:bg-gray-700 text-blue-600 dark:text-blue-400 shadow-sm' : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'}`}
                 >
                   <BarChart2 size={16} /> Analytics
                 </button>
                 <button
                   onClick={() => setViewMode('evaluation')}
-                  className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-colors ${viewMode === 'evaluation' ? 'bg-white text-blue-600 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}
+                  className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-colors ${viewMode === 'evaluation' ? 'bg-white dark:bg-gray-700 text-blue-600 dark:text-blue-400 shadow-sm' : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'}`}
                 >
                   <GraduationCap size={16} /> Evaluation
                 </button>
               </div>
 
               {viewMode === 'analytics' && latestDataChart && (
-                <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
-                  <h3 className="text-lg font-semibold text-gray-800 mb-4 tracking-tight">Latest Snapshot</h3>
+                <div className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700">
+                  <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-100 mb-4 tracking-tight">Latest Snapshot</h3>
                   <div className="h-[450px]">
                     <Bar 
                       ref={chartRef}
@@ -527,6 +554,7 @@ export default function AnalyticsDashboard() {
                             anchor: 'end',
                             align: 'top',
                             textAlign: 'center',
+                            color: isDarkMode ? '#e5e7eb' : '#6b7280',
                             formatter: (value, context) => {
                               const student = latestDataChart.studentsRef[context.dataIndex];
                               return student.streakDays ? ['🔥', `${student.streakDays}`] : '';
@@ -535,13 +563,20 @@ export default function AnalyticsDashboard() {
                           }
                         },
                         scales: { 
-                          y: { beginAtZero: true, grace: '10%' },
+                          y: { 
+                            beginAtZero: true, 
+                            grace: '10%',
+                            ticks: { color: isDarkMode ? '#e5e7eb' : '#6b7280' },
+                            grid: { color: isDarkMode ? '#374151' : '#f3f4f6' }
+                          },
                           x: { 
                             ticks: { 
                               autoSkip: false,
                               maxRotation: 45,
-                              minRotation: 45
-                            } 
+                              minRotation: 45,
+                              color: isDarkMode ? '#e5e7eb' : '#6b7280'
+                            },
+                            grid: { color: isDarkMode ? '#374151' : '#f3f4f6' }
                           }
                         },
                         interaction: { mode: 'index', intersect: true },
@@ -556,97 +591,97 @@ export default function AnalyticsDashboard() {
               {viewMode === 'evaluation' && (
                 <div className="space-y-6 animate-in fade-in duration-300">
                   {selectedClass === 'All' && classes.length > 2 ? (
-                    <div className="bg-white p-12 text-center rounded-xl shadow-sm border border-gray-100 flex flex-col items-center">
-                      <div className="bg-gray-50 p-4 rounded-full mb-4">
-                        <GraduationCap className="h-8 w-8 text-gray-400" />
+                    <div className="bg-white dark:bg-gray-800 p-12 text-center rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 flex flex-col items-center">
+                      <div className="bg-gray-50 dark:bg-gray-900 p-4 rounded-full mb-4">
+                        <GraduationCap className="h-8 w-8 text-gray-400 dark:text-gray-500" />
                       </div>
-                      <h3 className="text-lg font-semibold text-gray-700">Select a specific class</h3>
-                      <p className="text-sm text-gray-500 mt-2 max-w-sm mx-auto">The evaluation view requires filtering to a single classroom to accurately calculate and curve class grading scales.</p>
+                      <h3 className="text-lg font-semibold text-gray-700 dark:text-gray-200">Select a specific class</h3>
+                      <p className="text-sm text-gray-500 dark:text-gray-400 mt-2 max-w-sm mx-auto">The evaluation view requires filtering to a single classroom to accurately calculate and curve class grading scales.</p>
                     </div>
                   ) : (
                     <>
-                      <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+                      <div className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700">
                         <div className="flex items-center gap-2 mb-6">
-                          <Settings className="text-blue-500 h-5 w-5" />
-                          <h3 className="text-lg font-semibold text-gray-800 tracking-tight">Grading Configuration</h3>
+                          <Settings className="text-blue-500 dark:text-blue-400 h-5 w-5" />
+                          <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-100 tracking-tight">Grading Configuration</h3>
                         </div>
                         
                         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
                           <div>
-                            <label className="block text-xs font-semibold text-gray-500 uppercase mb-1">Max Grade</label>
-                            <input type="number" step="0.1" value={maxGrade} onChange={e => setMaxGrade(Number(e.target.value))} className="w-full text-sm border-gray-300 rounded-md shadow-sm p-2 border focus:ring-blue-500 outline-none" />
+                            <label className="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase mb-1">Max Grade</label>
+                            <input type="number" step="0.1" value={maxGrade} onChange={e => setMaxGrade(Number(e.target.value))} className="w-full text-sm bg-white dark:bg-gray-900 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-gray-100 rounded-md shadow-sm p-2 border focus:ring-blue-500 outline-none" />
                           </div>
                           <div>
-                            <label className="block text-xs font-semibold text-gray-500 uppercase mb-1">Main Target ({metric === 'xpTotals' ? 'XP' : metric === 'percentageCompleted' ? '%' : metric === 'streakDays' ? 'Streak' : 'Mins'})</label>
-                            <input type="number" value={primaryTarget} onChange={e => setPrimaryTarget(Number(e.target.value))} className="w-full text-sm border-gray-300 rounded-md shadow-sm p-2 border focus:ring-blue-500 outline-none" />
+                            <label className="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase mb-1">Main Target ({metric === 'xpTotals' ? 'XP' : metric === 'percentageCompleted' ? '%' : metric === 'streakDays' ? 'Streak' : 'Mins'})</label>
+                            <input type="number" value={primaryTarget} onChange={e => setPrimaryTarget(Number(e.target.value))} className="w-full text-sm bg-white dark:bg-gray-900 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-gray-100 rounded-md shadow-sm p-2 border focus:ring-blue-500 outline-none" />
                           </div>
                         </div>
 
                         <div className="space-y-3">
-                          <h4 className="text-xs font-semibold text-gray-500 uppercase">Metric Weights (%) - Auto Curves to 90th Percentile</h4>
+                          <h4 className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase">Metric Weights (%) - Auto Curves to 90th Percentile</h4>
                           <div className="grid grid-cols-2 text-sm gap-4 items-center">
-                            <div className="flex items-center justify-between bg-gray-50 p-2 rounded border border-gray-200">
-                              <span className="font-medium text-gray-600">Main Metric</span>
-                              <input type="number" value={metricWeights.primary} onChange={e => setMetricWeights({...metricWeights, primary: Number(e.target.value)})} className="w-16 p-1 border rounded text-center" />
+                            <div className="flex items-center justify-between bg-gray-50 dark:bg-gray-700 p-2 rounded border border-gray-200 dark:border-gray-600">
+                              <span className="font-medium text-gray-600 dark:text-gray-300">Main Metric</span>
+                              <input type="number" value={metricWeights.primary} onChange={e => setMetricWeights({...metricWeights, primary: Number(e.target.value)})} className="w-16 p-1 border rounded text-center bg-white dark:bg-gray-900 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-gray-100" />
                             </div>
-                            <div className="flex items-center justify-between bg-purple-50 p-2 rounded border border-purple-100">
-                              <span className="font-medium text-purple-700">Time</span>
-                              <input type="number" value={metricWeights.timeSpentMinutes} onChange={e => setMetricWeights({...metricWeights, timeSpentMinutes: Number(e.target.value)})} className="w-16 p-1 border rounded text-center" />
+                            <div className="flex items-center justify-between bg-purple-50 dark:bg-purple-900/30 p-2 rounded border border-purple-100 dark:border-purple-800">
+                              <span className="font-medium text-purple-700 dark:text-purple-400">Time</span>
+                              <input type="number" value={metricWeights.timeSpentMinutes} onChange={e => setMetricWeights({...metricWeights, timeSpentMinutes: Number(e.target.value)})} className="w-16 p-1 border rounded text-center bg-white dark:bg-purple-950 border-purple-200 dark:border-purple-700 text-purple-900 dark:text-purple-100" />
                             </div>
-                            <div className="flex items-center justify-between bg-pink-50 p-2 rounded border border-pink-100">
-                              <span className="font-medium text-pink-700">Lessons</span>
-                              <input type="number" value={metricWeights.lessons} onChange={e => setMetricWeights({...metricWeights, lessons: Number(e.target.value)})} className="w-16 p-1 border rounded text-center" />
+                            <div className="flex items-center justify-between bg-pink-50 dark:bg-pink-900/30 p-2 rounded border border-pink-100 dark:border-pink-800">
+                              <span className="font-medium text-pink-700 dark:text-pink-400">Lessons</span>
+                              <input type="number" value={metricWeights.lessons} onChange={e => setMetricWeights({...metricWeights, lessons: Number(e.target.value)})} className="w-16 p-1 border rounded text-center bg-white dark:bg-pink-950 border-pink-200 dark:border-pink-700 text-pink-900 dark:text-pink-100" />
                             </div>
-                            <div className="flex items-center justify-between bg-yellow-50 p-2 rounded border border-yellow-100">
-                              <span className="font-medium text-yellow-700">Stories</span>
-                              <input type="number" value={metricWeights.stories} onChange={e => setMetricWeights({...metricWeights, stories: Number(e.target.value)})} className="w-16 p-1 border rounded text-center" />
+                            <div className="flex items-center justify-between bg-yellow-50 dark:bg-yellow-900/30 p-2 rounded border border-yellow-100 dark:border-yellow-800">
+                              <span className="font-medium text-yellow-700 dark:text-yellow-500">Stories</span>
+                              <input type="number" value={metricWeights.stories} onChange={e => setMetricWeights({...metricWeights, stories: Number(e.target.value)})} className="w-16 p-1 border rounded text-center bg-white dark:bg-yellow-950 border-yellow-200 dark:border-yellow-700 text-yellow-900 dark:text-yellow-100" />
                             </div>
-                            <div className="flex items-center justify-between bg-orange-50 p-2 rounded border border-orange-100">
-                              <span className="font-medium text-orange-700">Practice Days</span>
-                              <input type="number" value={metricWeights.practiceDays} onChange={e => setMetricWeights({...metricWeights, practiceDays: Number(e.target.value)})} className="w-16 p-1 border rounded text-center" />
+                            <div className="flex items-center justify-between bg-orange-50 dark:bg-orange-900/30 p-2 rounded border border-orange-100 dark:border-orange-800">
+                              <span className="font-medium text-orange-700 dark:text-orange-400">Practice Days</span>
+                              <input type="number" value={metricWeights.practiceDays} onChange={e => setMetricWeights({...metricWeights, practiceDays: Number(e.target.value)})} className="w-16 p-1 border rounded text-center bg-white dark:bg-orange-950 border-orange-200 dark:border-orange-700 text-orange-900 dark:text-orange-100" />
                             </div>
                           </div>
                           
                           <div className="flex items-center justify-between pt-2">
                             <button
                               onClick={() => setShowGradingInfo(true)}
-                              className="flex items-center gap-1.5 text-xs font-semibold text-blue-600 bg-blue-50 hover:bg-blue-100 px-3 py-1.5 rounded-full transition-colors"
+                              className="flex items-center gap-1.5 text-xs font-semibold text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/30 hover:bg-blue-100 dark:hover:bg-blue-900/50 px-3 py-1.5 rounded-full transition-colors"
                             >
                               <Info className="h-4 w-4" />
                               How Grading Works
                             </button>
-                            <span className={`text-xs font-semibold ${Object.values(metricWeights).reduce((a,b)=>a+b,0) === 100 ? 'text-green-600' : 'text-orange-500'}`}>
+                            <span className={`text-xs font-semibold ${Object.values(metricWeights).reduce((a,b)=>a+b,0) === 100 ? 'text-green-600 dark:text-green-400' : 'text-orange-500 dark:text-orange-400'}`}>
                               Total Weight: {Object.values(metricWeights).reduce((a,b)=>a+b,0)}%
                             </span>
                           </div>
                         </div>
                       </div>
 
-                      <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-                        <div className="p-4 border-b border-gray-100 bg-gray-50 flex justify-between items-center">
-                          <h3 className="font-semibold text-gray-700">Roster Evaluation</h3>
-                          <span className="text-xs text-gray-500 font-medium tracking-wide">T/↓ to navigate</span>
+                      <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden">
+                        <div className="p-4 border-b border-gray-100 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 flex justify-between items-center">
+                          <h3 className="font-semibold text-gray-700 dark:text-gray-200">Roster Evaluation</h3>
+                          <span className="text-xs text-gray-500 dark:text-gray-400 font-medium tracking-wide">T/↓ to navigate</span>
                         </div>
-                        <ul className="divide-y divide-gray-100 max-h-[600px] overflow-y-auto">
+                        <ul className="divide-y divide-gray-100 dark:divide-gray-700 max-h-[600px] overflow-y-auto">
                           {evaluationResults?.map((res: any, idx: number) => {
                             const isSelected = selectedStudent?.username === res.student.username;
-                            const gradeColor = res.finalGrade >= maxGrade * 0.9 ? 'text-green-600' : res.finalGrade >= maxGrade * 0.7 ? 'text-blue-600' : res.finalGrade >= maxGrade * 0.5 ? 'text-orange-500' : 'text-red-600';
+                            const gradeColor = res.finalGrade >= maxGrade * 0.9 ? 'text-green-600 dark:text-green-500' : res.finalGrade >= maxGrade * 0.7 ? 'text-blue-600 dark:text-blue-400' : res.finalGrade >= maxGrade * 0.5 ? 'text-orange-500 dark:text-orange-400' : 'text-red-600 dark:text-red-500';
                             
                             return (
                               <li 
                                 key={res.student.username}
                                 onClick={() => setSelectedStudent(res.student)}
-                                className={`p-4 flex items-center justify-between cursor-pointer transition-colors ${isSelected ? 'bg-blue-50 border-l-4 border-blue-500' : 'hover:bg-gray-50 border-l-4 border-transparent'}`}
+                                className={`p-4 flex items-center justify-between cursor-pointer transition-colors ${isSelected ? 'bg-blue-50 dark:bg-blue-900/40 border-l-4 border-blue-500' : 'hover:bg-gray-50 dark:hover:bg-gray-700/50 border-l-4 border-transparent'}`}
                               >
                                 <div className="flex items-center gap-4">
-                                  <div className="text-sm font-semibold text-gray-400 w-6">{idx + 1}.</div>
+                                  <div className="text-sm font-semibold text-gray-400 dark:text-gray-500 w-6">{idx + 1}.</div>
                                   <div>
-                                    <div className="font-medium text-gray-900">{res.student.name}</div>
-                                    <div className="text-xs text-gray-500">@{res.student.username}</div>
+                                    <div className="font-medium text-gray-900 dark:text-gray-200">{res.student.name}</div>
+                                    <div className="text-xs text-gray-500 dark:text-gray-400">@{res.student.username}</div>
                                   </div>
                                 </div>
                                 <div className={`text-xl font-bold ${gradeColor}`}>
-                                  {res.finalGrade.toFixed(2)}<span className="text-gray-400 text-sm font-medium">/{maxGrade.toFixed(1)}</span>
+                                  {res.finalGrade.toFixed(2)}<span className="text-gray-400 dark:text-gray-500 text-sm font-medium">/{maxGrade.toFixed(1)}</span>
                                 </div>
                               </li>
                             );
@@ -659,58 +694,68 @@ export default function AnalyticsDashboard() {
               )}
 
               {selectedStudent && (
-                <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 flex items-start gap-4 animate-in fade-in slide-in-from-bottom-4 duration-300">
-                  <div className="p-4 bg-blue-50 rounded-full shrink-0">
-                    <User className="h-8 w-8 text-blue-500" />
+                <div className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 flex items-start gap-4 animate-in fade-in slide-in-from-bottom-4 duration-300">
+                  <div className="p-4 bg-blue-50 dark:bg-blue-900/30 rounded-full shrink-0">
+                    <User className="h-8 w-8 text-blue-500 dark:text-blue-400" />
                   </div>
                   <div className="flex-1 space-y-4">
                     <div className="flex justify-between items-start">
                       <div>
-                        <h4 className="text-xl font-bold text-gray-900">{selectedStudent.name}</h4>
-                        <p className="text-sm text-gray-500">@{selectedStudent.username} • {selectedStudent.className}</p>
+                        <h4 className="text-xl font-bold text-gray-900 dark:text-gray-100">{selectedStudent.name}</h4>
+                        <p className="text-sm text-gray-500 dark:text-gray-400">@{selectedStudent.username} • {selectedStudent.className}</p>
                       </div>
-                      <button onClick={() => setSelectedStudent(null)} className="text-gray-400 hover:text-gray-600">
+                      <button onClick={() => setSelectedStudent(null)} className="text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300">
                         <XCircle size={20} />
                       </button>
                     </div>
-                    <div className="grid grid-cols-3 gap-y-4 gap-x-4 border-t pt-4">
+                    <div className="grid grid-cols-3 gap-y-4 gap-x-4 border-t border-gray-100 dark:border-gray-700 pt-4">
                       <div>
-                        <p className="text-xs text-gray-500 uppercase font-semibold">Total XP</p>
-                        <p className="text-2xl font-bold text-blue-600">{selectedStudent.xpTotals.toLocaleString()}</p>
+                        <p className="text-xs text-gray-500 dark:text-gray-400 uppercase font-semibold">Total XP</p>
+                        <p className="text-2xl font-bold text-blue-600 dark:text-blue-400">{selectedStudent.xpTotals.toLocaleString()}</p>
                       </div>
                       <div>
-                        <p className="text-xs text-gray-500 uppercase font-semibold">Course %</p>
-                        <p className="text-2xl font-bold text-green-600">{selectedStudent.percentageCompleted}%</p>
+                        <p className="text-xs text-gray-500 dark:text-gray-400 uppercase font-semibold">Course %</p>
+                        <p className="text-2xl font-bold text-green-600 dark:text-green-400">{selectedStudent.percentageCompleted}%</p>
                       </div>
                       <div>
-                        <p className="text-xs text-gray-500 uppercase font-semibold">Time Spent</p>
-                        <p className="text-2xl font-bold text-purple-600">
+                        <p className="text-xs text-gray-500 dark:text-gray-400 uppercase font-semibold">Time Spent</p>
+                        <p className="text-2xl font-bold text-purple-600 dark:text-purple-400">
                           {Math.floor(selectedStudent.timeSpentMinutes / 60)}h {selectedStudent.timeSpentMinutes % 60}m
                         </p>
                       </div>
                       <div>
-                        <p className="text-xs text-gray-500 uppercase font-semibold">Practice Days</p>
-                        <p className="text-2xl font-bold text-orange-500">{selectedStudent.practiceDays}</p>
+                        <p className="text-xs text-gray-500 dark:text-gray-400 uppercase font-semibold">Practice Days</p>
+                        <p className="text-2xl font-bold text-orange-500 dark:text-orange-400">{selectedStudent.practiceDays}</p>
                       </div>
                       <div>
-                        <p className="text-xs text-gray-500 uppercase font-semibold">Lessons</p>
-                        <p className="text-2xl font-bold text-pink-600">{selectedStudent.lessons}</p>
+                        <p className="text-xs text-gray-500 dark:text-gray-400 uppercase font-semibold">Lessons</p>
+                        <p className="text-2xl font-bold text-pink-600 dark:text-pink-400">{selectedStudent.lessons}</p>
                       </div>
                       <div>
-                        <p className="text-xs text-gray-500 uppercase font-semibold">Stories</p>
-                        <p className="text-2xl font-bold text-yellow-600">{selectedStudent.stories}</p>
+                        <p className="text-xs text-gray-500 dark:text-gray-400 uppercase font-semibold">Stories</p>
+                        <p className="text-2xl font-bold text-yellow-600 dark:text-yellow-400">{selectedStudent.stories}</p>
                       </div>
                     </div>
 
                     {studentProgressChartData && (
-                      <div className="mt-6 pt-6 border-t border-gray-100">
-                        <h5 className="text-sm font-semibold text-gray-800 mb-4 tracking-tight">Individual Progression</h5>
+                      <div className="mt-6 pt-6 border-t border-gray-100 dark:border-gray-700">
+                        <h5 className="text-sm font-semibold text-gray-800 dark:text-gray-200 mb-4 tracking-tight">Individual Progression</h5>
                         <div className="h-48">
                           <Line 
                             data={studentProgressChartData}
                             options={{ 
                               maintainAspectRatio: false,
-                              scales: { y: { beginAtZero: true } },
+                              scales: { 
+                                y: { 
+                                  beginAtZero: true,
+                                  ticks: { color: isDarkMode ? '#e5e7eb' : '#6b7280' },
+                                  grid: { color: isDarkMode ? '#374151' : '#f3f4f6' }
+                                },
+                                x: { 
+                                  ticks: { color: isDarkMode ? '#e5e7eb' : '#6b7280' },
+                                  grid: { color: isDarkMode ? '#374151' : '#f3f4f6' }
+                                }
+                              },
                               plugins: { 
                                 legend: { display: false },
                                 datalabels: { display: false }
@@ -725,14 +770,24 @@ export default function AnalyticsDashboard() {
               )}
 
               {viewMode === 'analytics' && progressChartData && progressChartData.labels.length > 1 && (
-                <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
-                  <h3 className="text-lg font-semibold text-gray-800 mb-4 tracking-tight">Class Progression Over Time</h3>
+                <div className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700">
+                  <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-100 mb-4 tracking-tight">Class Progression Over Time</h3>
                   <div className="h-80">
                     <Line 
                       data={progressChartData}
                       options={{ 
                         maintainAspectRatio: false,
-                        scales: { y: { beginAtZero: true } },
+                        scales: { 
+                          y: { 
+                            beginAtZero: true,
+                            ticks: { color: isDarkMode ? '#e5e7eb' : '#6b7280' },
+                            grid: { color: isDarkMode ? '#374151' : '#f3f4f6' }
+                          },
+                          x: { 
+                            ticks: { color: isDarkMode ? '#e5e7eb' : '#6b7280' },
+                            grid: { color: isDarkMode ? '#374151' : '#f3f4f6' }
+                          }
+                        },
                         plugins: { datalabels: { display: false } }
                       }} 
                     />
@@ -754,52 +809,52 @@ export default function AnalyticsDashboard() {
       </div>
 
       {showGradingInfo && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 animate-in fade-in duration-200">
-          <div className="bg-white rounded-xl shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-            <div className="p-6 border-b border-gray-100 flex justify-between items-center bg-blue-50 rounded-t-xl">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 dark:bg-black/70 p-4 animate-in fade-in duration-200">
+          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto border border-gray-100 dark:border-gray-700">
+            <div className="p-6 border-b border-gray-100 dark:border-gray-700 flex justify-between items-center bg-blue-50 dark:bg-blue-900/30 rounded-t-xl">
               <div className="flex items-center gap-3">
-                <GraduationCap className="h-6 w-6 text-blue-600" />
-                <h2 className="text-xl font-bold text-blue-900">How Grading Works</h2>
+                <GraduationCap className="h-6 w-6 text-blue-600 dark:text-blue-400" />
+                <h2 className="text-xl font-bold text-blue-900 dark:text-blue-100">How Grading Works</h2>
               </div>
               <button 
                 onClick={() => setShowGradingInfo(false)} 
-                className="text-blue-400 hover:text-blue-600 transition-colors p-1"
+                className="text-blue-400 hover:text-blue-600 dark:hover:text-blue-300 transition-colors p-1"
               >
                 <XCircle size={24} />
               </button>
             </div>
-            <div className="p-8 space-y-6 text-gray-700 leading-relaxed text-sm md:text-base">
+            <div className="p-8 space-y-6 text-gray-700 dark:text-gray-300 leading-relaxed text-sm md:text-base">
               
               <div>
-                <h4 className="font-bold text-gray-900 mb-2 flex items-center gap-2">
-                  <span className="bg-blue-100 text-blue-700 px-2 py-0.5 rounded text-sm">1</span>
+                <h4 className="font-bold text-gray-900 dark:text-white mb-2 flex items-center gap-2">
+                  <span className="bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-400 px-2 py-0.5 rounded text-sm">1</span>
                   Main Target
                 </h4>
                 <p>The "Main Target" is the explicit goal you define (e.g. 50,000 XP) required for a student to earn 100% of the primary weight bracket.</p>
               </div>
 
               <div>
-                <h4 className="font-bold text-gray-900 mb-2 flex items-center gap-2">
-                  <span className="bg-purple-100 text-purple-700 px-2 py-0.5 rounded text-sm">2</span>
+                <h4 className="font-bold text-gray-900 dark:text-white mb-2 flex items-center gap-2">
+                  <span className="bg-purple-100 dark:bg-purple-900/50 text-purple-700 dark:text-purple-400 px-2 py-0.5 rounded text-sm">2</span>
                   The 90th Percentile Curve (Secondary Metrics)
                 </h4>
                 <p className="mb-3">
                   Instead of forcing you to guess how many lessons, stores, or hours a student <em>should</em> have completed, the system calculates these targets automatically based on the class's actual performance.
                 </p>
-                <div className="bg-gray-50 border border-gray-200 p-4 rounded-lg relative overflow-hidden">
-                  <div className="absolute left-0 top-0 bottom-0 w-1 bg-purple-400"></div>
-                  <p className="italic text-gray-600">
+                <div className="bg-gray-50 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-700 p-4 rounded-lg relative overflow-hidden">
+                  <div className="absolute left-0 top-0 bottom-0 w-1 bg-purple-400 dark:bg-purple-500"></div>
+                  <p className="italic text-gray-600 dark:text-gray-400">
                     <strong>Think of it this way:</strong> Imagine lining up all 30 students in your class from the fewest lessons completed to the most lessons completed. The system looks at the student standing near the very top—specifically, the one at the <strong>90th percentile</strong> (e.g., the 27th student).
                   </p>
-                  <p className="italic text-gray-600 mt-3">
+                  <p className="italic text-gray-600 dark:text-gray-400 mt-3">
                     Whatever amount <em>that</em> student did becomes the "100% score" target for everyone. This ensures the target is realistic based on the class, and prevents one single extreme overachiever (who did 1,000 lessons) from ruining the curve for the rest of the class!
                   </p>
                 </div>
               </div>
 
               <div>
-                <h4 className="font-bold text-gray-900 mb-2 flex items-center gap-2">
-                  <span className="bg-orange-100 text-orange-700 px-2 py-0.5 rounded text-sm">3</span>
+                <h4 className="font-bold text-gray-900 dark:text-white mb-2 flex items-center gap-2">
+                  <span className="bg-orange-100 dark:bg-orange-900/50 text-orange-700 dark:text-orange-400 px-2 py-0.5 rounded text-sm">3</span>
                   Recommendations
                 </h4>
                 <p>
@@ -807,10 +862,10 @@ export default function AnalyticsDashboard() {
                 </p>
               </div>
 
-              <div className="flex justify-end pt-4 border-t border-gray-100">
+              <div className="flex justify-end pt-4 border-t border-gray-100 dark:border-gray-700">
                 <button 
                   onClick={() => setShowGradingInfo(false)} 
-                  className="px-6 py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-colors shadow-sm"
+                  className="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors shadow-sm"
                 >
                   Got it
                 </button>
