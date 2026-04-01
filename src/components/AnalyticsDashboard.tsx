@@ -213,35 +213,56 @@ export default function AnalyticsDashboard() {
   const progressChartData = useMemo(() => {
     if (filteredData.length === 0) return null;
 
-    // Group by date, average metric
-    const byDate = new Map<number, number[]>();
+    const activeClasses = Array.from(new Set(filteredData.map(d => d.className))).sort();
+    
+    const uniqueDatesSet = new Set<number>();
     filteredData.forEach(d => {
-      const time = new Date(d.date).setHours(0,0,0,0);
-      const arr = byDate.get(time) || [];
-      arr.push(d[metric] as number);
-      byDate.set(time, arr);
+      uniqueDatesSet.add(new Date(d.date).setHours(0,0,0,0));
+    });
+    const sortedDates = Array.from(uniqueDatesSet).sort();
+
+    const byClassAndDate = new Map<string, Map<number, number[]>>();
+    activeClasses.forEach(cls => {
+      byClassAndDate.set(cls, new Map<number, number[]>());
     });
 
-    const sortedDates = Array.from(byDate.keys()).sort();
-    const averages = sortedDates.map(date => {
-      const arr = byDate.get(date)!;
-      return arr.reduce((sum, v) => sum + v, 0) / arr.length;
+    filteredData.forEach(d => {
+      const time = new Date(d.date).setHours(0,0,0,0);
+      const classMap = byClassAndDate.get(d.className)!;
+      const arr = classMap.get(time) || [];
+      arr.push(d[metric] as number);
+      classMap.set(time, arr);
+    });
+
+    const globalClasses = classes.filter(c => c !== 'All');
+
+    const datasets = activeClasses.map(cls => {
+      const classMap = byClassAndDate.get(cls)!;
+      const data = sortedDates.map(date => {
+        const arr = classMap.get(date);
+        if (!arr || arr.length === 0) return null;
+        return arr.reduce((sum, v) => sum + v, 0) / arr.length;
+      });
+
+      const colorIndex = globalClasses.indexOf(cls);
+      const colorDef = CLASS_COLORS[colorIndex % CLASS_COLORS.length] || CLASS_COLORS[0];
+
+      return {
+        label: `${cls}`,
+        data,
+        borderColor: colorDef.border,
+        backgroundColor: colorDef.bg,
+        tension: 0.3,
+        fill: false,
+        spanGaps: true
+      };
     });
 
     return {
       labels: sortedDates.map(d => new Date(d).toLocaleDateString()),
-      datasets: [
-        {
-          label: `Class Average - ${metric === 'xpTotals' ? 'XP' : metric === 'percentageCompleted' ? '%' : metric === 'streakDays' ? 'Streak Days' : 'Minutes'}`,
-          data: averages,
-          borderColor: 'rgb(16, 185, 129)',
-          backgroundColor: 'rgba(16, 185, 129, 0.5)',
-          tension: 0.3,
-          fill: true
-        }
-      ]
+      datasets
     };
-  }, [filteredData, metric]);
+  }, [filteredData, metric, classes]);
 
   const studentProgressChartData = useMemo(() => {
     if (!selectedStudent || dataPoints.length === 0) return null;
