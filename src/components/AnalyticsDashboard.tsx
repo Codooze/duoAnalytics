@@ -745,6 +745,14 @@ export default function AnalyticsDashboard() {
         )}
       </div>
 
+      <div className="fixed bottom-2 right-3 text-[10px] text-gray-300 hover:text-gray-500 transition-colors duration-500 flex items-center group cursor-default z-40 select-none">
+        <span>&copy; {new Date().getFullYear()} All rights reserved. By:&nbsp;</span>
+        <span className="font-semibold">J</span>
+        <span className="max-w-0 overflow-hidden group-hover:max-w-[40px] transition-all duration-500 ease-in-out whitespace-nowrap">eison&nbsp;</span>
+        <span className="font-semibold">M</span>
+        <span className="max-w-0 overflow-hidden group-hover:max-w-[60px] transition-all duration-500 ease-in-out whitespace-nowrap">artinez</span>
+      </div>
+
       {showGradingInfo && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 animate-in fade-in duration-200">
           <div className="bg-white rounded-xl shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
