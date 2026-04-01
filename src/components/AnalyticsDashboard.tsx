@@ -193,7 +193,7 @@ export default function AnalyticsDashboard() {
       (b[metric] as number) - (a[metric] as number)
     );
 
-    const uniqueClasses = Array.from(new Set(students.map(s => s.className))).sort();
+    const globalClasses = classes.filter(c => c !== 'All');
 
     return {
       labels: students.map(s => s.name || s.username),
@@ -202,13 +202,13 @@ export default function AnalyticsDashboard() {
         {
           label: metric === 'xpTotals' ? 'Total XP' : metric === 'percentageCompleted' ? '% Completed' : metric === 'streakDays' ? 'Streak Days' : 'Time Spent (min)',
           data: students.map(s => s[metric]),
-          backgroundColor: students.map(s => CLASS_COLORS[uniqueClasses.indexOf(s.className) % CLASS_COLORS.length].bg),
-          borderColor: students.map(s => CLASS_COLORS[uniqueClasses.indexOf(s.className) % CLASS_COLORS.length].border),
+          backgroundColor: students.map(s => CLASS_COLORS[globalClasses.indexOf(s.className) % CLASS_COLORS.length]?.bg || CLASS_COLORS[0].bg),
+          borderColor: students.map(s => CLASS_COLORS[globalClasses.indexOf(s.className) % CLASS_COLORS.length]?.border || CLASS_COLORS[0].border),
           borderWidth: 1,
         }
       ]
     };
-  }, [filteredData, metric]);
+  }, [filteredData, metric, classes]);
 
   const progressChartData = useMemo(() => {
     if (filteredData.length === 0) return null;
@@ -283,19 +283,42 @@ export default function AnalyticsDashboard() {
           <p className="text-gray-500 mt-2">Upload student data exports directly from Duolingo to visualize progress</p>
         </header>
 
-        <section className="bg-white p-8 rounded-xl shadow-sm border border-gray-100">
-          <div 
-            onDragOver={(e) => e.preventDefault()} 
-            onDrop={onDrop}
-            className="border-2 border-dashed border-blue-200 rounded-xl p-12 text-center hover:bg-blue-50 transition-colors"
-          >
-            <UploadCloud className="mx-auto h-12 w-12 text-blue-400 mb-4" />
-            <p className="text-lg text-gray-600 font-medium">Drag & Drop CSV files here</p>
-            <p className="text-sm text-gray-400 mt-2 mb-6">Support for multiple files to track historical data</p>
-            <label className="cursor-pointer bg-blue-600 text-white px-6 py-2.5 rounded-lg font-medium hover:bg-blue-700 transition shadow-sm">
-              Browse Files
-              <input type="file" multiple accept=".csv" className="hidden" onChange={onFileInput} />
-            </label>
+        <section className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+          <div className="flex flex-col md:flex-row gap-6 items-stretch">
+            <div 
+              onDragOver={(e) => e.preventDefault()} 
+              onDrop={onDrop}
+              className="flex-1 border-2 border-dashed border-blue-200 rounded-xl p-8 text-center hover:bg-blue-50 transition-colors flex flex-col items-center justify-center max-w-2xl"
+            >
+              <UploadCloud className="mx-auto h-10 w-10 text-blue-400 mb-3" />
+              <p className="text-base text-gray-600 font-medium">Drag & Drop CSV files here</p>
+              <p className="text-xs text-gray-400 mt-1 mb-5">Support for multiple files to track historical data</p>
+              <label className="cursor-pointer bg-blue-600 text-white px-5 py-2 rounded-lg text-sm font-medium hover:bg-blue-700 transition shadow-sm">
+                Browse Files
+                <input type="file" multiple accept=".csv" className="hidden" onChange={onFileInput} />
+              </label>
+            </div>
+
+            <div className="flex-1 bg-gray-50 border border-gray-100 rounded-xl p-6 overflow-y-auto min-h-[160px] max-h-[220px]">
+              <h3 className="text-sm font-semibold text-gray-400 uppercase tracking-wider mb-4">Class Color Legend</h3>
+              <div className="flex flex-wrap gap-2">
+                {classes.filter(c => c !== 'All').length > 0 ? (
+                  classes.filter(c => c !== 'All').map((className, index) => {
+                    const color = CLASS_COLORS[index % CLASS_COLORS.length];
+                    return (
+                      <div key={className} className="flex items-center gap-2 bg-white px-3 py-1.5 rounded-full shadow-sm border border-gray-200">
+                        <span className="w-3 h-3 rounded-full" style={{ backgroundColor: color.bg, borderColor: color.border, borderWidth: 1 }}></span>
+                        <span className="text-sm font-medium text-gray-700">{className}</span>
+                      </div>
+                    );
+                  })
+                ) : (
+                  <div className="flex items-center justify-center h-full w-full">
+                    <p className="text-sm text-gray-400 italic">Upload data to see class colors automatically</p>
+                  </div>
+                )}
+              </div>
+            </div>
           </div>
         </section>
 
