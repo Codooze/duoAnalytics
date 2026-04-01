@@ -367,9 +367,10 @@ export default function AnalyticsDashboard() {
                             display: true,
                             anchor: 'end',
                             align: 'top',
+                            textAlign: 'center',
                             formatter: (value, context) => {
                               const student = latestDataChart.studentsRef[context.dataIndex];
-                              return student.streakDays ? `🔥 ${student.streakDays}` : '';
+                              return student.streakDays ? ['🔥', `${student.streakDays}`] : '';
                             },
                             font: { weight: 'bold' }
                           }
