@@ -12,7 +12,7 @@ import {
   Legend,
 } from 'chart.js';
 import { Bar, Line, getElementAtEvent } from 'react-chartjs-2';
-import { UploadCloud, FileSpreadsheet, XCircle, User } from 'lucide-react';
+import { UploadCloud, FileSpreadsheet, XCircle, User, Trash2 } from 'lucide-react';
 import ChartDataLabels from 'chartjs-plugin-datalabels';
 
 ChartJS.register(
@@ -43,6 +43,7 @@ type DuolingoRow = {
 };
 
 type ProcessedData = {
+  fileId: string;
   name: string;
   username: string;
   className: string;
@@ -79,9 +80,16 @@ const parseTime = (val: string) => {
 
 export default function AnalyticsDashboard() {
   const [dataPoints, setDataPoints] = useState<ProcessedData[]>([]);
+  const [uploadedFiles, setUploadedFiles] = useState<{id: string, name: string, date: Date}[]>([]);
   const [selectedClass, setSelectedClass] = useState<string>('All');
   const [metric, setMetric] = useState<keyof ProcessedData>('xpTotals');
   const [selectedStudent, setSelectedStudent] = useState<ProcessedData | null>(null);
+  
+  const removeFile = (id: string) => {
+    setUploadedFiles(prev => prev.filter(f => f.id !== id));
+    setDataPoints(prev => prev.filter(d => d.fileId !== id));
+    if (selectedStudent) setSelectedStudent(null);
+  };
   const chartRef = React.useRef<any>(null);
 
   const onDrop = useCallback((e: React.DragEvent<HTMLDivElement>) => {
@@ -98,40 +106,53 @@ export default function AnalyticsDashboard() {
   };
 
   const processFiles = (files: File[]) => {
-    const newData: ProcessedData[] = [];
-    let filesProcessed = 0;
+    setUploadedFiles(prevUploaded => {
+      const newFiles = files.filter(f => !prevUploaded.some(pf => pf.id === `${f.name}-${f.lastModified}`));
+      if (newFiles.length === 0) return prevUploaded;
 
-    files.forEach((file) => {
-      const fileDate = new Date(file.lastModified);
-      
-      Papa.parse<DuolingoRow>(file, {
-        header: true,
-        skipEmptyLines: true,
-        complete: (results) => {
-          results.data.forEach((row) => {
-            if (row['Nombre completo']) {
-              newData.push({
-                name: row['Nombre completo'] || row.Usuario,
-                username: row.Usuario,
-                className: row['Salón de clases'] || 'Unknown',
-                date: fileDate,
-                xpTotals: parseInt(row['EXP totales'] || '0', 10),
-                percentageCompleted: parsePercentage(row['Porcentaje completado']),
-                timeSpentMinutes: parseTime(row['Tiempo dedicado a aprender']),
-                streakDays: parseInt(row['Días de racha'] || '0', 10),
-                practiceDays: parseInt(row['Días de práctica'] || '0', 10),
-                lessons: parseInt(row['Lecciones'] || '0', 10),
-                stories: parseInt(row['Cuentos'] || '0', 10)
-              });
+      let filesProcessed = 0;
+      const newData: ProcessedData[] = [];
+
+      newFiles.forEach((file) => {
+        const fileId = `${file.name}-${file.lastModified}`;
+        const fileDate = new Date(file.lastModified);
+        
+        Papa.parse<DuolingoRow>(file, {
+          header: true,
+          skipEmptyLines: true,
+          complete: (results) => {
+            results.data.forEach((row) => {
+              if (row['Nombre completo']) {
+                newData.push({
+                  fileId,
+                  name: row['Nombre completo'] || row.Usuario,
+                  username: row.Usuario,
+                  className: row['Salón de clases'] || 'Unknown',
+                  date: fileDate,
+                  xpTotals: parseInt(row['EXP totales'] || '0', 10),
+                  percentageCompleted: parsePercentage(row['Porcentaje completado']),
+                  timeSpentMinutes: parseTime(row['Tiempo dedicado a aprender']),
+                  streakDays: parseInt(row['Días de racha'] || '0', 10),
+                  practiceDays: parseInt(row['Días de práctica'] || '0', 10),
+                  lessons: parseInt(row['Lecciones'] || '0', 10),
+                  stories: parseInt(row['Cuentos'] || '0', 10)
+                });
+              }
+            });
+            
+            filesProcessed++;
+            if (filesProcessed === newFiles.length) {
+              setDataPoints(prev => [...prev, ...newData]);
             }
-          });
-          
-          filesProcessed++;
-          if (filesProcessed === files.length) {
-            setDataPoints(prev => [...prev, ...newData]);
           }
-        }
+        });
       });
+
+      return [...prevUploaded, ...newFiles.map(f => ({
+        id: `${f.name}-${f.lastModified}`,
+        name: f.name,
+        date: new Date(f.lastModified)
+      }))];
     });
   };
 
@@ -297,13 +318,32 @@ export default function AnalyticsDashboard() {
               </div>
 
               <div className="pt-6 border-t border-gray-100">
-                <div className="flex justify-between items-center text-sm">
+                <div className="flex justify-between items-center text-sm mb-4">
                   <span className="text-gray-500">Total Records:</span>
                   <span className="font-semibold text-gray-900">{dataPoints.length}</span>
                 </div>
+                {uploadedFiles.length > 0 && (
+                  <div className="space-y-4 mb-4">
+                    <span className="text-sm font-semibold text-gray-700">Uploaded Files ({uploadedFiles.length})</span>
+                    <ul className="space-y-2">
+                      {uploadedFiles.map(f => (
+                        <li key={f.id} className="flex justify-between items-center text-sm bg-gray-50 p-2 rounded-md border border-gray-200">
+                          <span className="truncate max-w-[160px]" title={f.name}>{f.name}</span>
+                          <button onClick={() => removeFile(f.id)} className="text-red-500 hover:text-red-700 p-1" title="Remove file">
+                            <Trash2 size={14} />
+                          </button>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
                 <button 
-                  onClick={() => setDataPoints([])}
-                  className="mt-6 flex items-center justify-center w-full gap-2 text-sm text-red-600 bg-red-50 hover:bg-red-100 px-4 py-2 rounded-md transition"
+                  onClick={() => {
+                    setDataPoints([]);
+                    setUploadedFiles([]);
+                    if (selectedStudent) setSelectedStudent(null);
+                  }}
+                  className="mt-4 flex items-center justify-center w-full gap-2 text-sm text-red-600 bg-red-50 hover:bg-red-100 px-4 py-2 rounded-md transition"
                 >
                   <XCircle size={16} /> Clear All Data
                 </button>
