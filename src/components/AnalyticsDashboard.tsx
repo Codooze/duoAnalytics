@@ -78,6 +78,17 @@ const parseTime = (val: string) => {
   return minutes;
 };
 
+const CLASS_COLORS = [
+  { bg: 'rgba(59, 130, 246, 0.6)', border: 'rgb(59, 130, 246)' },
+  { bg: 'rgba(168, 85, 247, 0.6)', border: 'rgb(168, 85, 247)' },
+  { bg: 'rgba(16, 185, 129, 0.6)', border: 'rgb(16, 185, 129)' },
+  { bg: 'rgba(245, 158, 11, 0.6)', border: 'rgb(245, 158, 11)' },
+  { bg: 'rgba(244, 63, 94, 0.6)', border: 'rgb(244, 63, 94)' },
+  { bg: 'rgba(6, 182, 212, 0.6)', border: 'rgb(6, 182, 212)' },
+  { bg: 'rgba(99, 102, 241, 0.6)', border: 'rgb(99, 102, 241)' },
+  { bg: 'rgba(249, 115, 22, 0.6)', border: 'rgb(249, 115, 22)' },
+];
+
 export default function AnalyticsDashboard() {
   const [dataPoints, setDataPoints] = useState<ProcessedData[]>([]);
   const [uploadedFiles, setUploadedFiles] = useState<{id: string, name: string, date: Date}[]>([]);
@@ -182,6 +193,8 @@ export default function AnalyticsDashboard() {
       (b[metric] as number) - (a[metric] as number)
     );
 
+    const uniqueClasses = Array.from(new Set(students.map(s => s.className))).sort();
+
     return {
       labels: students.map(s => s.name || s.username),
       studentsRef: students, // Need this to access student info on click
@@ -189,8 +202,8 @@ export default function AnalyticsDashboard() {
         {
           label: metric === 'xpTotals' ? 'Total XP' : metric === 'percentageCompleted' ? '% Completed' : metric === 'streakDays' ? 'Streak Days' : 'Time Spent (min)',
           data: students.map(s => s[metric]),
-          backgroundColor: 'rgba(59, 130, 246, 0.6)',
-          borderColor: 'rgb(59, 130, 246)',
+          backgroundColor: students.map(s => CLASS_COLORS[uniqueClasses.indexOf(s.className) % CLASS_COLORS.length].bg),
+          borderColor: students.map(s => CLASS_COLORS[uniqueClasses.indexOf(s.className) % CLASS_COLORS.length].border),
           borderWidth: 1,
         }
       ]
