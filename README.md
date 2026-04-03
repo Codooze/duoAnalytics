@@ -1,46 +1,56 @@
-# Astro Starter Kit: Basics
+# DuoAnalytics
 
-```sh
-npm create astro@latest -- --template basics
-```
+DuoAnalytics is a dual-target analytics application. It features a web-first frontend built with Astro, React, and Tailwind CSS, alongside a native desktop client powered by Electrobun.
 
-> 🧑‍🚀 **Seasoned astronaut?** Delete this file. Have fun!
+## 🚀 Tech Stack
 
-## 🚀 Project Structure
+- **Framework**: [Astro](https://astro.build/)
+- **UI Components**: [React](https://react.dev/) & [Tailwind CSS](https://tailwindcss.com/)
+- **Desktop Runtime**: [Electrobun](https://electrobun.dev/)
 
-Inside of your Astro project, you'll see the following folders and files:
+## 📂 Project Structure
 
 ```text
 /
-├── public/
-│   └── favicon.svg
-├── src
-│   ├── assets
-│   │   └── astro.svg
-│   ├── components
-│   │   └── Welcome.astro
-│   ├── layouts
-│   │   └── Layout.astro
-│   └── pages
-│       └── index.astro
-└── package.json
+├── artifacts/             # Packaged desktop application builds
+├── build/                 # Compiled Electrobun desktop bundles
+├── public/                # Static assets mapped to the web root
+├── src/
+│   ├── bun/               # Electrobun backend/main process code
+│   ├── components/        # UI components (React/Astro)
+│   ├── desktop/           # Desktop-specific views
+│   ├── layouts/           # Astro layouts
+│   └── pages/             # Astro file-based routing
+├── electrobun.config.ts   # Configuration for the desktop app
+├── astro.config.mjs       # Configuration for the web app
+└── package.json           # Dependencies and scripts
 ```
-
-To learn more about the folder structure of an Astro project, refer to [our guide on project structure](https://docs.astro.build/en/basics/project-structure/).
 
 ## 🧞 Commands
 
 All commands are run from the root of the project, from a terminal:
 
-| Command                   | Action                                           |
-| :------------------------ | :----------------------------------------------- |
-| `npm install`             | Installs dependencies                            |
-| `npm run dev`             | Starts local dev server at `localhost:4321`      |
-| `npm run build`           | Build your production site to `./dist/`          |
-| `npm run preview`         | Preview your build locally, before deploying     |
-| `npm run astro ...`       | Run CLI commands like `astro add`, `astro check` |
-| `npm run astro -- --help` | Get help using the Astro CLI                     |
+### Web (Cloudflare Pages Target)
 
-## 👀 Want to learn more?
+| Command             | Action                                        |
+| :------------------ | :-------------------------------------------- |
+| `bun install`     | Installs dependencies                         |
+| `bun run dev`     | Starts local web dev server                   |
+| `bun run build`   | Builds the production web site to `./dist/` |
+| `bun run preview` | Previews the web build locally                |
 
-Feel free to check [our documentation](https://docs.astro.build) or jump into our [Discord server](https://astro.build/chat).
+### Desktop (Electrobun)
+
+| Command                   | Action                                       |
+| :------------------------ | :------------------------------------------- |
+| `bun run desktop:dev`   | Builds web assets and starts the desktop app |
+| `bun run desktop:build` | Packages the desktop application             |
+
+## 🌍 Deployment
+
+The web dashboard is organized to support standard cloud deployments. To deploy the web application to **Cloudflare Pages**, link this repository in your Cloudflare dashboard, set the framework to "Astro", the build command to `bun run build`, and the build output directory to `dist`.
+
+## 👀 Learn More
+
+- [Astro Documentation](https://docs.astro.build)
+- [Electrobun Integration Guide](./ELECTROBUN_INTEGRATION_GUIDE.md)
