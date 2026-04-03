@@ -9,7 +9,9 @@
     "dev": "astro dev",
     "build": "astro build",
     "preview": "astro preview",
-    "astro": "astro"
+    "astro": "astro",
+    "desktop:dev": "bun run build && electrobun dev",
+    "desktop:build": "bun run build && electrobun build --env=stable"
   },
   "dependencies": {
     "@astrojs/react": "^5.0.2",
@@ -21,6 +23,7 @@
     "chart.js": "^4.5.1",
     "chartjs-plugin-datalabels": "^2.2.0",
     "date-fns": "^4.1.0",
+    "electrobun": "^1.16.0",
     "lucide-react": "^1.7.0",
     "papaparse": "^5.5.3",
     "react": "^19.2.4",
