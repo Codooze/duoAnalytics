@@ -28,19 +28,7 @@ ChartJS.register(
 );
 
 // Types
-type DuolingoRow = {
-  'Nombre completo': string;
-  Usuario: string;
-  Correo: string;
-  'Salón de clases': string;
-  Idioma: string;
-  'Días de racha': string;
-  'Secciones completadas': string;
-  'Porcentaje completado': string;
-  'EXP totales': string;
-  'Tiempo dedicado a aprender': string;
-  [key: string]: string;
-};
+type DuolingoRow = string[];
 
 type ProcessedData = {
   fileId: string;
@@ -167,24 +155,36 @@ export default function AnalyticsDashboard() {
         const fileDate = new Date(file.lastModified);
         
         Papa.parse<DuolingoRow>(file, {
-          header: true,
+          header: false,
           skipEmptyLines: true,
           complete: (results) => {
-            results.data.forEach((row) => {
-              if (row['Nombre completo']) {
+            // DOCUMENTATION FOR FUTURE DEBUGGING:
+            // We use `header: false` and access columns by their fixed array index instead of header names.
+            // Duolingo CSV exports maintain a consistent column order across different
+            // localized languages (e.g., English vs Spanish). By relying on indexes, 
+            // we seamlessly support multi-language exports without maintaining a dictionary of translated headers.
+            //
+            // Column Index Mapping:
+            // [0] Name, [1] Username, [3] Classroom, [5] Streak, [8] % Completed
+            // [9] Practice Days, [10] Total XP, [11] Time Spent, [12] Lessons, [13] Stories
+            
+            // Skip the first row (header) if it matches known header names
+            const dataToProcess = results.data.filter(row => row[0] !== 'Nombre completo' && row[0] !== 'Full name' && row[0] !== 'Name');
+            dataToProcess.forEach((row) => {
+              if (row[0]) {
                 newData.push({
                   fileId,
-                  name: row['Nombre completo'] || row.Usuario,
-                  username: row.Usuario,
-                  className: row['Salón de clases'] || 'Unknown',
+                  name: row[0] || row[1],
+                  username: row[1],
+                  className: row[3] || 'Unknown',
                   date: fileDate,
-                  xpTotals: parseInt(row['EXP totales'] || '0', 10),
-                  percentageCompleted: parsePercentage(row['Porcentaje completado']),
-                  timeSpentMinutes: parseTime(row['Tiempo dedicado a aprender']),
-                  streakDays: parseInt(row['Días de racha'] || '0', 10),
-                  practiceDays: parseInt(row['Días de práctica'] || '0', 10),
-                  lessons: parseInt(row['Lecciones'] || '0', 10),
-                  stories: parseInt(row['Cuentos'] || '0', 10)
+                  xpTotals: parseInt(row[10] || '0', 10),
+                  percentageCompleted: parsePercentage(row[8]),
+                  timeSpentMinutes: parseTime(row[11]),
+                  streakDays: parseInt(row[5] || '0', 10),
+                  practiceDays: parseInt(row[9] || '0', 10),
+                  lessons: parseInt(row[12] || '0', 10),
+                  stories: parseInt(row[13] || '0', 10)
                 });
               }
             });
