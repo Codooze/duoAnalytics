@@ -38,8 +38,8 @@ const win = new BrowserWindow({
   frame: {
     width: 1200,
     height: 800,
-    minWidth: 800,
-    minHeight: 600,
+    x: 800,
+    y: 600,
   }
 });
 console.log("Window created!");

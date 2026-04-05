@@ -47,11 +47,13 @@ export default {
     },
     win: {
       bundleCEF: false,
-      defaultRenderer: "native"
+      defaultRenderer: "native",
+      icon: "public/icon_256x256.png"
     },
     linux: {
       bundleCEF: false,
-      defaultRenderer: "native"
+      defaultRenderer: "native",
+      icon: "public/favicon.ico"
     }
   },
 } satisfies ElectrobunConfig;
