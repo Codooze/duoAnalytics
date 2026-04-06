@@ -354,7 +354,7 @@ export default function AnalyticsDashboard() {
     const totalWeight = metricWeights.primary + metricWeights.timeSpentMinutes + metricWeights.lessons + metricWeights.stories + metricWeights.practiceDays || 100;
 
     const results = students.map(student => {
-      const primaryMetricValue = Number(student[metric]) || 0;
+      const primaryMetricValue = Number(student.xpTotals) || 0;
       const primaryScore = Math.min(primaryMetricValue / (primaryTarget || 1), 1) * (metricWeights.primary / totalWeight);
       const timeScore = Math.min(student.timeSpentMinutes / p90Time, 1) * (metricWeights.timeSpentMinutes / totalWeight);
       const lessonsScore = Math.min(student.lessons / p90Lessons, 1) * (metricWeights.lessons / totalWeight);
@@ -367,7 +367,7 @@ export default function AnalyticsDashboard() {
     });
 
     return results.sort((a, b) => b.finalGrade - a.finalGrade);
-  }, [filteredData, viewMode, metric, primaryTarget, metricWeights, maxGrade]);
+  }, [filteredData, viewMode, primaryTarget, metricWeights, maxGrade]);
 
   React.useEffect(() => {
     if (viewMode !== 'evaluation' || !selectedStudent || !evaluationResults) return;
@@ -612,7 +612,7 @@ export default function AnalyticsDashboard() {
                             <input type="number" step="0.1" value={maxGrade} onChange={e => setMaxGrade(Number(e.target.value))} className="w-full text-sm bg-white dark:bg-gray-900 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-gray-100 rounded-md shadow-sm p-2 border focus:ring-blue-500 outline-none" />
                           </div>
                           <div>
-                            <label className="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase mb-1">Main Target ({metric === 'xpTotals' ? 'XP' : metric === 'percentageCompleted' ? '%' : metric === 'streakDays' ? 'Streak' : 'Mins'})</label>
+                            <label className="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase mb-1">Main Target (XP)</label>
                             <input type="number" value={primaryTarget} onChange={e => setPrimaryTarget(Number(e.target.value))} className="w-full text-sm bg-white dark:bg-gray-900 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-gray-100 rounded-md shadow-sm p-2 border focus:ring-blue-500 outline-none" />
                           </div>
                         </div>
