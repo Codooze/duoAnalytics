@@ -48,7 +48,7 @@ export default {
     win: {
       bundleCEF: false,
       defaultRenderer: "native",
-      icon: "public/icon_256x256.png"
+      icon: "public/favicon.ico"
     },
     linux: {
       bundleCEF: false,
