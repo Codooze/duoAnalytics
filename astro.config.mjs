@@ -6,6 +6,9 @@ import tailwindcss from '@tailwindcss/vite';
 
 // https://astro.build/config
 export default defineConfig({
+  build: {
+    format: 'file', // Disable directory urls (like /about/index.html to just /about.html)
+  },
   integrations: [react()],
 
   vite: {

@@ -28,19 +28,7 @@ ChartJS.register(
 );
 
 // Types
-type DuolingoRow = {
-  'Nombre completo': string;
-  Usuario: string;
-  Correo: string;
-  'Salón de clases': string;
-  Idioma: string;
-  'Días de racha': string;
-  'Secciones completadas': string;
-  'Porcentaje completado': string;
-  'EXP totales': string;
-  'Tiempo dedicado a aprender': string;
-  [key: string]: string;
-};
+type DuolingoRow = string[];
 
 type ProcessedData = {
   fileId: string;
@@ -167,24 +155,36 @@ export default function AnalyticsDashboard() {
         const fileDate = new Date(file.lastModified);
         
         Papa.parse<DuolingoRow>(file, {
-          header: true,
+          header: false,
           skipEmptyLines: true,
           complete: (results) => {
-            results.data.forEach((row) => {
-              if (row['Nombre completo']) {
+            // DOCUMENTATION FOR FUTURE DEBUGGING:
+            // We use `header: false` and access columns by their fixed array index instead of header names.
+            // Duolingo CSV exports maintain a consistent column order across different
+            // localized languages (e.g., English vs Spanish). By relying on indexes, 
+            // we seamlessly support multi-language exports without maintaining a dictionary of translated headers.
+            //
+            // Column Index Mapping:
+            // [0] Name, [1] Username, [3] Classroom, [5] Streak, [8] % Completed
+            // [9] Practice Days, [10] Total XP, [11] Time Spent, [12] Lessons, [13] Stories
+            
+            // Skip the first row (header) if it matches known header names
+            const dataToProcess = results.data.filter(row => row[0] !== 'Nombre completo' && row[0] !== 'Full name' && row[0] !== 'Name');
+            dataToProcess.forEach((row) => {
+              if (row[0]) {
                 newData.push({
                   fileId,
-                  name: row['Nombre completo'] || row.Usuario,
-                  username: row.Usuario,
-                  className: row['Salón de clases'] || 'Unknown',
+                  name: row[0] || row[1],
+                  username: row[1],
+                  className: row[3] || 'Unknown',
                   date: fileDate,
-                  xpTotals: parseInt(row['EXP totales'] || '0', 10),
-                  percentageCompleted: parsePercentage(row['Porcentaje completado']),
-                  timeSpentMinutes: parseTime(row['Tiempo dedicado a aprender']),
-                  streakDays: parseInt(row['Días de racha'] || '0', 10),
-                  practiceDays: parseInt(row['Días de práctica'] || '0', 10),
-                  lessons: parseInt(row['Lecciones'] || '0', 10),
-                  stories: parseInt(row['Cuentos'] || '0', 10)
+                  xpTotals: parseInt(row[10] || '0', 10),
+                  percentageCompleted: parsePercentage(row[8]),
+                  timeSpentMinutes: parseTime(row[11]),
+                  streakDays: parseInt(row[5] || '0', 10),
+                  practiceDays: parseInt(row[9] || '0', 10),
+                  lessons: parseInt(row[12] || '0', 10),
+                  stories: parseInt(row[13] || '0', 10)
                 });
               }
             });
@@ -339,27 +339,30 @@ export default function AnalyticsDashboard() {
     const students = Array.from(latestPerStudent.values());
     if (students.length === 0) return [];
 
-    const getP90 = (key: keyof ProcessedData) => {
+    const getCappedAverage = (key: keyof ProcessedData) => {
       const vals = students.map(s => s[key] as number).sort((a, b) => a - b);
       if (vals.length === 0) return 1;
-      const idx = Math.floor(vals.length * 0.9);
-      return vals[idx] || 1;
+      // Exclude the top 10% to prevent extreme outliers from skewing the average
+      const capIndex = Math.floor(vals.length * 0.9);
+      const filteredVals = vals.slice(0, capIndex === 0 ? 1 : capIndex);
+      const avg = filteredVals.reduce((sum, val) => sum + val, 0) / filteredVals.length;
+      return avg || 1;
     };
 
-    const p90Time = getP90('timeSpentMinutes');
-    const p90Lessons = getP90('lessons');
-    const p90Stories = getP90('stories');
-    const p90Practice = getP90('practiceDays');
+    const targetTime = getCappedAverage('timeSpentMinutes');
+    const targetLessons = getCappedAverage('lessons');
+    const targetStories = getCappedAverage('stories');
+    const targetPractice = getCappedAverage('practiceDays');
 
     const totalWeight = metricWeights.primary + metricWeights.timeSpentMinutes + metricWeights.lessons + metricWeights.stories + metricWeights.practiceDays || 100;
 
     const results = students.map(student => {
-      const primaryMetricValue = Number(student[metric]) || 0;
+      const primaryMetricValue = Number(student.xpTotals) || 0;
       const primaryScore = Math.min(primaryMetricValue / (primaryTarget || 1), 1) * (metricWeights.primary / totalWeight);
-      const timeScore = Math.min(student.timeSpentMinutes / p90Time, 1) * (metricWeights.timeSpentMinutes / totalWeight);
-      const lessonsScore = Math.min(student.lessons / p90Lessons, 1) * (metricWeights.lessons / totalWeight);
-      const storiesScore = Math.min(student.stories / p90Stories, 1) * (metricWeights.stories / totalWeight);
-      const practiceScore = Math.min(student.practiceDays / p90Practice, 1) * (metricWeights.practiceDays / totalWeight);
+      const timeScore = Math.min(student.timeSpentMinutes / targetTime, 1) * (metricWeights.timeSpentMinutes / totalWeight);
+      const lessonsScore = Math.min(student.lessons / targetLessons, 1) * (metricWeights.lessons / totalWeight);
+      const storiesScore = Math.min(student.stories / targetStories, 1) * (metricWeights.stories / totalWeight);
+      const practiceScore = Math.min(student.practiceDays / targetPractice, 1) * (metricWeights.practiceDays / totalWeight);
 
       const finalGrade = (primaryScore + timeScore + lessonsScore + storiesScore + practiceScore) * maxGrade;
 
@@ -367,7 +370,7 @@ export default function AnalyticsDashboard() {
     });
 
     return results.sort((a, b) => b.finalGrade - a.finalGrade);
-  }, [filteredData, viewMode, metric, primaryTarget, metricWeights, maxGrade]);
+  }, [filteredData, viewMode, primaryTarget, metricWeights, maxGrade]);
 
   React.useEffect(() => {
     if (viewMode !== 'evaluation' || !selectedStudent || !evaluationResults) return;
@@ -612,13 +615,13 @@ export default function AnalyticsDashboard() {
                             <input type="number" step="0.1" value={maxGrade} onChange={e => setMaxGrade(Number(e.target.value))} className="w-full text-sm bg-white dark:bg-gray-900 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-gray-100 rounded-md shadow-sm p-2 border focus:ring-blue-500 outline-none" />
                           </div>
                           <div>
-                            <label className="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase mb-1">Main Target ({metric === 'xpTotals' ? 'XP' : metric === 'percentageCompleted' ? '%' : metric === 'streakDays' ? 'Streak' : 'Mins'})</label>
+                            <label className="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase mb-1">Main Target (XP)</label>
                             <input type="number" value={primaryTarget} onChange={e => setPrimaryTarget(Number(e.target.value))} className="w-full text-sm bg-white dark:bg-gray-900 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-gray-100 rounded-md shadow-sm p-2 border focus:ring-blue-500 outline-none" />
                           </div>
                         </div>
 
                         <div className="space-y-3">
-                          <h4 className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase">Metric Weights (%) - Auto Curves to 90th Percentile</h4>
+                          <h4 className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase">Metric Weights (%) - Auto Curves to Class Average</h4>
                           <div className="grid grid-cols-2 text-sm gap-4 items-center">
                             <div className="flex items-center justify-between bg-gray-50 dark:bg-gray-700 p-2 rounded border border-gray-200 dark:border-gray-600">
                               <span className="font-medium text-gray-600 dark:text-gray-300">Main Metric</span>
@@ -836,18 +839,18 @@ export default function AnalyticsDashboard() {
               <div>
                 <h4 className="font-bold text-gray-900 dark:text-white mb-2 flex items-center gap-2">
                   <span className="bg-purple-100 dark:bg-purple-900/50 text-purple-700 dark:text-purple-400 px-2 py-0.5 rounded text-sm">2</span>
-                  The 90th Percentile Curve (Secondary Metrics)
+                  Class Average Curve (Outlier Rejection)
                 </h4>
                 <p className="mb-3">
-                  Instead of forcing you to guess how many lessons, stores, or hours a student <em>should</em> have completed, the system calculates these targets automatically based on the class's actual performance.
+                  Instead of forcing you to guess how many lessons, stories, or hours a student <em>should</em> have completed, the system calculates targets automatically based on the class's average performance.
                 </p>
                 <div className="bg-gray-50 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-700 p-4 rounded-lg relative overflow-hidden">
                   <div className="absolute left-0 top-0 bottom-0 w-1 bg-purple-400 dark:bg-purple-500"></div>
                   <p className="italic text-gray-600 dark:text-gray-400">
-                    <strong>Think of it this way:</strong> Imagine lining up all 30 students in your class from the fewest lessons completed to the most lessons completed. The system looks at the student standing near the very top—specifically, the one at the <strong>90th percentile</strong> (e.g., the 27th student).
+                    <strong>Think of it this way:</strong> The system takes everyone's scores and calculates the classroom average, but it <strong>excludes the top 10% of overachievers</strong> before doing the math.
                   </p>
                   <p className="italic text-gray-600 dark:text-gray-400 mt-3">
-                    Whatever amount <em>that</em> student did becomes the "100% score" target for everyone. This ensures the target is realistic based on the class, and prevents one single extreme overachiever (who did 1,000 lessons) from ruining the curve for the rest of the class!
+                    This sets a fair "average student" target. It ensures the goal is realistic based on the majority of the class, and prevents extreme outliers (like a student who practiced 10x more than everyone else) from unfairly inflating the average and ruining the curve for everyone else.
                   </p>
                 </div>
               </div>
