@@ -4,10 +4,10 @@ import { defineConfig } from 'astro/config';
 import react from '@astrojs/react';
 import tailwindcss from '@tailwindcss/vite';
 
-import cloudflare from '@astrojs/cloudflare';
-
 // https://astro.build/config
 export default defineConfig({
+  site: 'https://Codooze.github.io',
+  base: '/duoAnalytics',
   build: {
     format: 'file', // Disable directory urls (like /about/index.html to just /about.html)
   },
@@ -16,7 +16,5 @@ export default defineConfig({
 
   vite: {
     plugins: [tailwindcss()]
-  },
-
-  adapter: cloudflare()
+  }
 });

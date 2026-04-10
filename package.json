@@ -15,7 +15,6 @@
     "generate-types": "wrangler types"
   },
   "dependencies": {
-    "@astrojs/cloudflare": "^13.1.8",
     "@astrojs/react": "^5.0.2",
     "@tailwindcss/vite": "^4.2.2",
     "@types/papaparse": "^5.5.2",
