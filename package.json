@@ -12,7 +12,8 @@
     "astro": "astro",
     "desktop:dev": "bun run build && electrobun dev",
     "desktop:build": "bun run build && electrobun build --env=stable",
-    "generate-types": "wrangler types"
+    "generate-types": "wrangler types",
+    "deploy": "bun run build && bunx gh-pages -d dist -t"
   },
   "dependencies": {
     "@astrojs/react": "^5.0.2",
